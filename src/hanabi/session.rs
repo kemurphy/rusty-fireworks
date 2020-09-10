@@ -4,8 +4,7 @@ use async_trait::async_trait;
 use log::info;
 use tungstenite::protocol::Message;
 
-use crate::session::MessageSink;
-use crate::session::Session;
+use crate::session::{MessageSink, Session};
 
 #[derive(Copy, Clone, fmt::Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub struct UserId(u64);

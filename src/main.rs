@@ -4,16 +4,14 @@
 
 use std::env;
 
-use log::error;
-use log::info;
-
+use log::{error, info};
 use tokio::net::TcpListener;
 
 mod hanabi;
 mod session;
 mod sync;
 
-use crate::hanabi::conn::handle_connect;
+use crate::hanabi::conn;
 
 fn init_logging() {
     env_logger::Builder::new()
@@ -39,7 +37,7 @@ async fn main() -> anyhow::Result<()> {
         match listener.accept().await {
             Ok((stream, peer_addr)) => {
                 tokio::spawn(async move {
-                    if let Err(e) = handle_connect(stream).await {
+                    if let Err(e) = conn::handle_connect(stream).await {
                         error!("Peer {} connection closed: {}", peer_addr, e)
                     }
                 });

@@ -9,11 +9,9 @@ use log::info;
 use sha2::Sha256;
 use thiserror::Error;
 use tokio::net::TcpStream;
-use tokio_tungstenite::accept_hdr_async;
 use tungstenite::handshake::server::Request;
 
-use crate::hanabi::session::HanabiSession;
-use crate::hanabi::session::UserId;
+use crate::hanabi::session::{HanabiSession, UserId};
 use crate::session;
 
 #[derive(Debug, Error)]
@@ -82,7 +80,7 @@ pub async fn handle_connect(stream: TcpStream) -> anyhow::Result<()> {
             })
     };
 
-    let ws = accept_hdr_async(stream, accept_cb)
+    let ws = tokio_tungstenite::accept_hdr_async(stream, accept_cb)
         .await
         .context("Handshake error")?;
 

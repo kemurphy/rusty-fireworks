@@ -3,23 +3,17 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::pin::Pin;
 use std::sync::Arc;
-use std::task::Context;
-use std::task::Poll;
+use std::task::{Context, Poll};
 
-use futures::SinkExt;
-use futures::Stream;
-use log::debug;
-use log::warn;
-use tokio::sync::mpsc;
-use tokio::sync::oneshot;
-use tokio::sync::watch;
-use tokio::sync::Notify;
+use futures::{SinkExt, Stream};
+use log::{debug, warn};
+use tokio::sync::{mpsc, oneshot, watch, Notify};
 use tungstenite::Message;
 
 use crate::sync::UnboundedSink;
 
 use super::id::SessionId;
-use super::map::get_event_sink_map;
+use super::map;
 use super::LifecycleError;
 use super::Session;
 
@@ -64,7 +58,7 @@ impl<T: Session> Drop for EventStream<T> {
     fn drop(&mut self) {
         tokio::task::block_in_place(|| {
             futures::executor::block_on(async move {
-                let event_sink_map = get_event_sink_map::<T>().await;
+                let event_sink_map = map::get_event_sink_map::<T>().await;
                 let ctx = {
                     let mut unlocked_map = event_sink_map.write().await;
                     match unlocked_map.entry(self.key) {

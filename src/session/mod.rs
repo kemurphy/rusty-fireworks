@@ -9,29 +9,21 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::task::Poll;
 
-use futures::prelude::*;
-use log::*;
-
 use async_trait::async_trait;
+use futures::prelude::*;
 use futures::select_biased;
-use futures::stream::SplitSink;
-use futures::stream::SplitStream;
+use futures::stream::{SplitSink, SplitStream};
+use log::{debug, error, info};
 use thiserror::Error;
 use tokio::net::TcpStream;
 use tokio::pin;
-use tokio::sync::watch;
-use tokio::sync::Notify;
+use tokio::sync::{watch, Notify};
 use tokio_tungstenite::WebSocketStream;
 use tungstenite::error::Error as WsError;
 use tungstenite::protocol::Message;
 
-use self::events::make_event_pipe;
-use self::events::Event;
-use self::events::EventPipe;
-use self::events::EventSinkCtx;
-use self::events::HandoffPacket;
+use self::events::{Event, EventPipe, EventSinkCtx, HandoffPacket};
 use self::id::SessionId;
-use self::map::get_or_create_event_sink_map;
 use self::map::EventSinkEntry;
 
 #[derive(Debug, Error)]
@@ -129,7 +121,7 @@ async fn handoff_or_make_pipe<T: Session>(
     session: &T,
 ) -> anyhow::Result<(EventPipe<T>, watch::Sender<Option<EventSinkCtx<T>>>)> {
     let key = session.get_key();
-    let event_sink_map = get_or_create_event_sink_map().await;
+    let event_sink_map = map::get_or_create_event_sink_map().await;
     let mut old_sink_ctx = {
         let unlocked_map = event_sink_map.read().await;
         match unlocked_map.get(&key) {
@@ -189,7 +181,7 @@ async fn handoff_or_make_pipe<T: Session>(
         future.notified().await;
     }
 
-    let event_pipe = old_event_pipe.unwrap_or_else(|| make_event_pipe(key));
+    let event_pipe = old_event_pipe.unwrap_or_else(|| events::make_event_pipe(key));
     let event_sink_ctx = EventSinkCtx::new(id, session, event_pipe.0.clone());
 
     // We have everything we need to update the event sink map.  Broadcast it and block on

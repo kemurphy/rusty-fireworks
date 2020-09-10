@@ -1,15 +1,12 @@
-use std::any::Any;
-use std::any::TypeId;
-use std::collections::hash_map::Entry;
-use std::collections::hash_map::HashMap;
+use std::any::{Any, TypeId};
+use std::collections::hash_map::{Entry, HashMap};
 use std::sync::Arc;
 
 use anyhow::anyhow;
 use futures::never::Never;
 use futures::TryFutureExt;
 use once_cell::sync::Lazy;
-use tokio::sync::watch;
-use tokio::sync::RwLock;
+use tokio::sync::{watch, RwLock};
 
 use super::events::EventSinkCtx;
 use super::Session;
